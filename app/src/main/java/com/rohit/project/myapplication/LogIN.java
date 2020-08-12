@@ -26,13 +26,16 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class LogIN extends AppCompatActivity {
 
     private GoogleSignInClient mGoogleSignInClient;
     private static final int RC_SIGN_IN = 12;
     private FirebaseAuth mAuth;
-
+    private DatabaseReference databaseReference;
+    private FirebaseHelper firebaseHelper;
 
     @Override
     protected void onStart() {
@@ -51,7 +54,7 @@ public class LogIN extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
         this.getSupportActionBar().hide();
-
+        databaseReference = FirebaseDatabase.getInstance().getReference("residents");
         mAuth = FirebaseAuth.getInstance();
 
         createRequest();
@@ -111,11 +114,22 @@ public class LogIN extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             //Log.d(TAG, "signInWithCredential:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Intent intent = new Intent(LogIN.this,Profile.class);
-                            intent.putExtra("FirebaseUser",user);
-                            startActivity(intent);
-                            finish();
+                            FirebaseUser user = (FirebaseUser) mAuth.getCurrentUser();
+                            Log.d("user in LogIN: ",user.toString());
+                            if(new FirebaseHelper().isExistingUser(user)) {
+                                Log.d("Message","Old User");
+                                Intent intent = new Intent(LogIN.this, Profile.class);
+                                //intent.putExtra("FirebaseUser", user);
+                                startActivity(intent);
+                                finish();
+                            }else{
+                                Log.d("Message: ","new user" );
+                                Intent intent = new Intent(LogIN.this,EditProfile.class);
+                                intent.putExtra("email",user.getEmail());
+                                intent.putExtra("name",user.getDisplayName());
+                                startActivity(intent);
+                                finish();
+                            }
                             //updateUI(user);
                         } else {
                             Toast.makeText(getApplicationContext(),"LogIn Failed",Toast.LENGTH_SHORT).show();
